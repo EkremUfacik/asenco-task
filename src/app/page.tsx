@@ -9,8 +9,8 @@ import {
   Tooltip,
   Legend,
 } from "chart.js";
-import { use, useEffect, useState } from "react";
-import ChartBar from "./components/ChartBar";
+import { useState } from "react";
+import ChartBar from "@/components/ChartBar";
 import { Input } from "@/components/ui/input";
 import { Pause, Play } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -24,80 +24,110 @@ ChartJS.register(
   Legend
 );
 
+type ChannelOptions = {
+  channelNumber: number;
+  generationTime: number;
+  minRange: number;
+  maxRange: number;
+};
+
+const initialChannelOptions: ChannelOptions = {
+  channelNumber: 2,
+  generationTime: 1,
+  minRange: 1,
+  maxRange: 10,
+};
+
 const ChannelGenerator = () => {
   const [isRunning, setIsRunning] = useState(false);
   const [isGenerated, setIsGenerated] = useState(false);
-  const [channelNumber, setChannelNumber] = useState(2);
-  const [generationTime, setGenerationTime] = useState(1);
-  const [numberRange, setNumberRange] = useState({
-    min: 1,
-    max: 10,
-  });
+  const [channelOptions, setChannelOptions] = useState(initialChannelOptions);
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.currentTarget;
+    setChannelOptions((prevOptions) => ({
+      ...prevOptions,
+      [name]: Number(value),
+    }));
+  };
 
   const handleGenerate = (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    const channel = e.currentTarget.channel.value;
-    const generation = e.currentTarget.generation.value;
-    const minRange = e.currentTarget.minRange.value;
-    const maxRange = e.currentTarget.maxRange.value;
-
-    if (minRange && maxRange) {
-      setNumberRange({
-        min: Number(minRange),
-        max: Number(maxRange),
-      });
+    const { minRange, maxRange } = channelOptions;
+    if (maxRange < minRange) {
+      alert("Max Range must be greater than Min Range");
+      return;
     }
-    channel && setChannelNumber(Number(channel));
-    generation && setGenerationTime(Number(generation));
     setIsGenerated(true);
+  };
+
+  const handleReset = () => {
+    setIsGenerated(false);
+    setIsRunning(false);
+    setChannelOptions(initialChannelOptions);
   };
 
   return (
     <div className="">
-      <h1 className="text-center pt-10 text-2xl font-bold">
+      <h1 className="text-center pt-10 text-2xl font-bold border-b pb-4">
         Asenco Data Visualizer Task
       </h1>
       {!isGenerated ? (
-        <form onSubmit={handleGenerate} className="text-center mt-28">
+        <form onSubmit={handleGenerate} className="w-fit mx-auto mt-28 ">
+          <label htmlFor="channelNumber" className="font-semibold">
+            Enter Number of Channels
+          </label>
           <Input
-            id="channel"
-            name="channel"
+            id="channelNumber"
+            name="channelNumber"
             type="number"
-            placeholder="Enter Number of Channels"
-            className="w-64 mx-auto"
+            value={channelOptions.channelNumber}
+            className=" mt-2"
             min={1}
             max={10}
+            onChange={handleChange}
           />
 
+          <label
+            htmlFor="generationTime"
+            className="font-semibold mt-8 inline-block"
+          >
+            Enter Generation Time (in seconds)
+          </label>
           <Input
-            id="generation"
-            name="generation"
+            id="generationTime"
+            name="generationTime"
             type="number"
-            placeholder="Enter Generation Time"
-            className="w-64 mx-auto my-6"
+            value={channelOptions.generationTime}
+            className="mt-2 mb-8"
             min={1}
+            onChange={handleChange}
           />
 
-          <p className="font-semibold">Number Range</p>
+          <p className="font-semibold ">Number Range</p>
           <div className="flex items-center gap-4 mt-2 justify-center">
             <Input
               id="minRange"
               name="minRange"
               type="number"
-              placeholder="Enter Min"
-              className="w-32 "
+              value={channelOptions.minRange}
+              className="flex-1"
               min={1}
+              onChange={handleChange}
             />
+            -
             <Input
               id="maxRange"
               name="maxRange"
               type="number"
-              placeholder="Enter Max"
-              className="w-32 "
+              value={channelOptions.maxRange}
+              className="flex-1"
               max={200}
+              min={2}
+              onChange={handleChange}
             />
           </div>
-          <Button type="submit" className="w-48 mt-10">
+          <Button type="submit" className="w-full my-10">
             Generate
           </Button>
         </form>
@@ -117,23 +147,20 @@ const ChannelGenerator = () => {
                 <Play className="mr-2 h-4 w-4" /> Play
               </Button>
             )}
-            <Button
-              variant={"destructive"}
-              className=""
-              onClick={() => setIsGenerated(false)}
-            >
+            <Button variant={"destructive"} className="" onClick={handleReset}>
               Reset
             </Button>
           </div>
 
           <div className="pb-20">
-            {new Array(channelNumber).fill(0).map((_, index) => (
+            {new Array(channelOptions.channelNumber).fill(0).map((_, index) => (
               <ChartBar
                 key={index}
                 index={index}
                 isRunning={isRunning}
-                generationTime={generationTime}
-                numberRange={numberRange}
+                generationTime={channelOptions.generationTime}
+                minRange={channelOptions.minRange}
+                maxRange={channelOptions.maxRange}
               />
             ))}
           </div>

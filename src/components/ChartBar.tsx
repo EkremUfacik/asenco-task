@@ -6,14 +6,16 @@ type ChartBarProps = {
   isRunning: boolean;
   index: number;
   generationTime: number;
-  numberRange: { min: number; max: number };
+  minRange: number;
+  maxRange: number;
 };
 
 const ChartBar = ({
   isRunning,
   index,
   generationTime,
-  numberRange,
+  minRange,
+  maxRange,
 }: ChartBarProps) => {
   const [dataChannel, setDataChannel] = useState<number[]>([]);
 
@@ -26,17 +28,19 @@ const ChartBar = ({
     },
     scales: {
       y: {
-        suggestedMax: numberRange.max,
+        suggestedMax: maxRange,
       },
     },
   };
+
+  console.log("render" + index);
 
   useEffect(() => {
     let intervalId: NodeJS.Timeout;
 
     const startGenerators = () => {
       intervalId = setInterval(() => {
-        const randomNumber = getRandomNumber(numberRange.min, numberRange.max);
+        const randomNumber = getRandomNumber(minRange, maxRange);
 
         setDataChannel((prevData) => [...prevData, randomNumber]);
       }, 1000 * generationTime);
